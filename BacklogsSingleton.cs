@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using BacklogsWeb.Graph;
 using System.Text;
+using System.Globalization;
 
 namespace BacklogsWeb
 {
@@ -66,6 +67,28 @@ namespace BacklogsWeb
                     return json;
                 }
             }
+        }
+
+        public List<Backlog>? GetBacklogs()
+        {
+            return backlogs;
+        }
+
+        public List<Backlog> GetIncompleteBacklogs()
+        {
+            var incompleteBacklogs = new List<Backlog>();
+            foreach (var backlog in backlogs)
+            {
+                if(!backlog.IsComplete ?? true)
+                {
+                    if (backlog.CreatedDate == "None" || backlog.CreatedDate == null)
+                    {
+                        backlog.CreatedDate = DateTimeOffset.MinValue.ToString("d", CultureInfo.InvariantCulture);
+                    }
+                    incompleteBacklogs.Add(backlog);
+                }
+            }
+            return incompleteBacklogs;
         }
     }
 }

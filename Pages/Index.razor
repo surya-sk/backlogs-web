@@ -1,12 +1,22 @@
 ﻿@page "/"
+@using Microsoft.Graph
+@using System.Globalization
+@using System.Diagnostics
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
 
 <div class="jumbotron">
-    <h1>Blazor Client-side Graph Tutorial</h1>
-    <p class="lead">This sample app shows how to use the Microsoft Graph API to access a user's data from a Blazor client-side app</p>
+    <h1>Welcome to Backlogs!</h1>
     <AuthorizeView>
         <Authorized>
-            <h4>Welcome @context.User.Identity.Name!</h4>
-            <p>Use the navigation bar on the left to get started.</p>
+            <h2>Recently Added</h2>
+            <ul>
+                @foreach(var backlog in recentlyAdded)
+                {
+                    <li>@backlog.Name</li>
+                    <li>@backlog.Director</li>
+                }
+            </ul>
         </Authorized>
         <NotAuthorized>
             <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
@@ -16,5 +26,27 @@
 
 @code
 {
-    
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+    private GraphServiceClient? graphClient;
+    private List<Backlog>? recentlyAdded;
+
+    List<Backlog>? incompleteBacklogs;
+    List<Backlog>? completedBacklogs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        recentlyAdded = new List<Backlog>();
+        var user = (await authenticationState).User;
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
+        incompleteBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
+
+        foreach (var backlog in incompleteBacklogs.OrderByDescending(b => DateTimeOffset.Parse(b.CreatedDate, CultureInfo.InvariantCulture)).Skip(0).Take(6))
+        {
+            recentlyAdded?.Add(backlog);
+        }
+    }
 }
