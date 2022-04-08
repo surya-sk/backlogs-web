@@ -90,5 +90,27 @@ namespace BacklogsWeb
             }
             return incompleteBacklogs;
         }
+
+        public List<Backlog> GetCompletedBacklogs()
+        {
+            var completedBacklogs = new List<Backlog>();
+            foreach (var backlog in backlogs)
+            {
+                if(backlog.IsComplete ?? true)
+                {
+                    if (backlog.CompletedDate == null)
+                    {
+                        backlog.CompletedDate = DateTimeOffset.MinValue.ToString("d", CultureInfo.InvariantCulture);
+                    }
+                    completedBacklogs.Add(backlog);
+                }
+            }
+            return completedBacklogs;
+        }
+
+        public int GetCount()
+        {
+            return backlogs.Count;
+        }
     }
 }

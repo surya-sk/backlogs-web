@@ -17,6 +17,24 @@
                     <li>@backlog.Director</li>
                 }
             </ul>
+
+            <h2>In Progress</h2>
+            <ul>
+                @foreach(var backlog in inProgress)
+                {
+                    <li>@backlog.Name</li>
+                    <li>@backlog.Director</li>
+                }
+            </ul>
+
+            <h2>Recenly Completed</h2>
+            <ul>
+                @foreach(var backlog in recentlyCompleted)
+                {
+                    <li>@backlog.Name</li>
+                    <li>@backlog.Director</li>
+                }
+            </ul>
         </Authorized>
         <NotAuthorized>
             <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
@@ -30,23 +48,55 @@
     private Task<AuthenticationState>? authenticationState { get; set; }
     private GraphServiceClient? graphClient;
     private List<Backlog>? recentlyAdded;
+    private List<Backlog>? inProgress;
+    private List<Backlog>? recentlyCompleted;
 
     List<Backlog>? incompleteBacklogs;
+    List<Backlog>? inProgressBacklogs;
     List<Backlog>? completedBacklogs;
 
     protected override async Task OnInitializedAsync()
     {
         recentlyAdded = new List<Backlog>();
+        inProgressBacklogs = new List<Backlog>();
+        inProgress = new List<Backlog>();
+        recentlyCompleted = new List<Backlog>();
+
         var user = (await authenticationState).User;
 
+        await LoadBacklogs();
+    }
+
+    private async Task LoadBacklogs()
+    {
         graphClient = clientFactory.GetAuthenticatedClient();
 
         await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
-        incompleteBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
 
-        foreach (var backlog in incompleteBacklogs.OrderByDescending(b => DateTimeOffset.Parse(b.CreatedDate, CultureInfo.InvariantCulture)).Skip(0).Take(6))
+        if (BacklogsSingleton.GetInstance().GetCount() > 0)
         {
-            recentlyAdded?.Add(backlog);
+            incompleteBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
+            completedBacklogs = BacklogsSingleton.GetInstance().GetCompletedBacklogs();
+
+            foreach(var backlog in incompleteBacklogs.Where(b => b.Progress > 0.0))
+            {
+                inProgressBacklogs?.Add(backlog);
+            }
+
+            foreach (var backlog in incompleteBacklogs.OrderByDescending(b => DateTimeOffset.Parse(b.CreatedDate, CultureInfo.InvariantCulture)).Skip(0).Take(6))
+            {
+                recentlyAdded?.Add(backlog);
+            }
+
+            foreach(var backlog in inProgressBacklogs.OrderByDescending(b => b.Progress).Skip(0).Take(6))
+            {
+                inProgress.Add(backlog);
+            }
+
+            foreach (var backlog in completedBacklogs.OrderByDescending(b => DateTimeOffset.Parse(b.CompletedDate, CultureInfo.InvariantCulture)).Skip(0).Take(6))
+            {
+                recentlyCompleted.Add(backlog);
+            }
         }
     }
 }
