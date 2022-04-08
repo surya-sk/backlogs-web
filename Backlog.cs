@@ -12,6 +12,7 @@
         public string? ImageURL { get; set; }
         public string? TrailerURL { get; set; }
         public int? Progress { get; set; }
+        public int? Lenght { get; set; }
         public string? SearchURL { get; set; }
         public string? Units { get; set; }
         public string? Director { get; set; }

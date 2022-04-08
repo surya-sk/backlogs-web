@@ -9,32 +9,55 @@
     <h1>Welcome to Backlogs!</h1>
     <AuthorizeView>
         <Authorized>
-            <h2>Recently Added</h2>
-            <ul>
-                @foreach(var backlog in recentlyAdded)
-                {
-                    <li>@backlog.Name</li>
-                    <li>@backlog.Director</li>
-                }
-            </ul>
+            <h4>Recently Added</h4>
+            <div style="overflow-x:auto;">
+                <table>
+                    <tr>
+                        @foreach(var backlog in recentlyAdded)
+                        {
+                            <td>
+                                <div class="card">
+                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                </table>
+            </div>
 
-            <h2>In Progress</h2>
-            <ul>
-                @foreach(var backlog in inProgress)
-                {
-                    <li>@backlog.Name</li>
-                    <li>@backlog.Director</li>
-                }
-            </ul>
+            <h4>In Progress</h4>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <tr>
+                            @foreach(var backlog in inProgress)
+                            {
+                            <td>
+                                <div class="card">
+                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140>
+                                </div>
+                                <p><strong>@backlog.Progress</strong> <strong>@backlog.Units</strong></p>
+                            </td>
+                            }
+                        </tr>
+                    </table>
+                </div>
 
-            <h2>Recenly Completed</h2>
-            <ul>
-                @foreach(var backlog in recentlyCompleted)
-                {
-                    <li>@backlog.Name</li>
-                    <li>@backlog.Director</li>
-                }
-            </ul>
+            <h4>Recenly Completed</h4>
+            <div style="overflow-x:auto;">
+                <table>
+                    <tr>
+                        @foreach(var backlog in recentlyCompleted)
+                        {
+                            <td>
+                                <div class="card">
+                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140>
+                                </div>
+                                <p><strong>Rating: </strong>@backlog.UserRating</p>
+                            </td>
+                        }
+                    </tr>
+                </table>
+            </div>
         </Authorized>
         <NotAuthorized>
             <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
