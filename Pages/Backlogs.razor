@@ -15,6 +15,15 @@
 		<option value="Games">Games</option>
 		<option value="Books">Books</option>
 	</select>
+	<div class="row">
+		@foreach(var backlog in allBacklogs)
+		{
+			<div class="column card">
+				<img src=@backlog.ImageURL alt="Cover" height=150 width=140>
+				<h6>@backlog.Name</h6>
+			</div>
+		}
+	</div>
 </AuthorizeView>
 
 
