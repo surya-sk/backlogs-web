@@ -1,0 +1,41 @@
+﻿@page "/selectedBacklog/{id}"
+@using Microsoft.Graph
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+
+<AuthorizeView>
+	<div class="row">
+		<div id="container" class="col-3">
+			<img src=@selectedBacklog?.ImageURL id="cover" height=200 width=200 />
+		</div>
+		<div class="col-6">
+			<h2>@selectedBacklog?.Name</h2>
+			<h3>@selectedBacklog?.Director</h3>
+			<p>@selectedBacklog?.Description</p>
+		</div>
+	</div>
+</AuthorizeView>
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState>? authenticationState { get; set; }
+	[Parameter]
+	public string id { get; set; }
+	private GraphServiceClient? graphClient;
+	private List<Backlog>? allBacklogs;
+	private Backlog? selectedBacklog;
+
+	protected override async Task OnInitializedAsync()
+	{
+		graphClient = clientFactory.GetAuthenticatedClient();
+		var user = (await authenticationState).User;
+
+		//await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
+		allBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
+	}
+
+	protected override void OnParametersSet()
+	{
+		selectedBacklog = allBacklogs?.First(b => b.Id.ToString() == id);
+	}
+}

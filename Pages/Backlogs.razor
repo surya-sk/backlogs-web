@@ -2,6 +2,7 @@
 @using Microsoft.Graph
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
 
 <h3>Backlogs</h3>
 
@@ -15,11 +16,11 @@
 		<option value="Games">Games</option>
 		<option value="Books">Books</option>
 	</select>
-	<div class="row" style="padding: 10px">
+	<div class="row">
 		@foreach(var backlog in allBacklogs)
 		{
-			<div class="column card">
-				<img src=@backlog.ImageURL alt="Cover" height=150 width=140>
+			<div class="card" style="padding: 10px">
+				<img src=@backlog.ImageURL alt="Cover" height=150 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
 				<h6>@backlog.Name</h6>
 			</div>
 		}
@@ -53,5 +54,10 @@
 		gameBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Game"));
 		bookBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Book"));
 
-    }
+	}
+
+	public void OpenBacklog(Guid id)
+	{
+		uriHelper.NavigateTo($"selectedBacklog/{id}");
+	}
 }
