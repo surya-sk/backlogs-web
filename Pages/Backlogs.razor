@@ -1,0 +1,48 @@
+﻿@page "/backlogs"
+@using Microsoft.Graph
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+
+<h3>Backlogs</h3>
+
+<AuthorizeView>
+	<label>Choose type</label>
+	<select id="type">
+		<option value="All">All</option>
+		<option value="Films">Films</option>
+		<option value="Albums">Albums</option>
+		<option value="TV">TV</option>
+		<option value="Games">Games</option>
+		<option value="Books">Books</option>
+	</select>
+</AuthorizeView>
+
+
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState>? authenticationState { get; set; }
+	private GraphServiceClient? graphClient;
+	private List<Backlog>? allBacklogs;
+	private List<Backlog>? filmBacklogs;
+	private List<Backlog>? tvBacklogs;
+	private List<Backlog>? albumBacklogs;
+	private List<Backlog>? bookBacklogs;
+	private List<Backlog>? gameBacklogs;
+
+	protected override async Task OnInitializedAsync()
+	{
+		graphClient = clientFactory.GetAuthenticatedClient();
+		var user = (await authenticationState).User;
+
+		await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
+
+		allBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
+		filmBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Film"));
+		tvBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "TV"));
+		albumBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Album"));
+		gameBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Game"));
+		bookBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Book"));
+
+    }
+}
