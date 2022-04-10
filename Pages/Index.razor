@@ -4,6 +4,7 @@
 @using System.Diagnostics
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
 
 <div class="jumbotron">
     <h1>Welcome to Backlogs!</h1>
@@ -17,7 +18,7 @@
                         {
                             <td style="padding: 10px">
                                 <div class="card">
-                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140>
+                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
                                 </div>
                             </td>
                         }
@@ -33,7 +34,7 @@
                             {
                             <td style="padding: 10px">
                                 <div class="card">
-                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140>
+                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
                                 </div>
                                 <p><strong>@backlog.Progress</strong> <strong>@backlog.Units</strong></p>
                             </td>
@@ -122,4 +123,9 @@
             }
         }
     }
+
+    public void OpenBacklog(Guid id)
+	{
+		uriHelper.NavigateTo($"selectedBacklog/{id}");
+	}
 }
