@@ -5,13 +5,19 @@
 
 <AuthorizeView>
 	<div class="row">
-		<div id="container" class="col-3">
-			<img src=@selectedBacklog?.ImageURL id="cover" height=200 width=200 />
-		</div>
-		<div class="col-6">
-			<h2>@selectedBacklog?.Name</h2>
-			<h3>@selectedBacklog?.Director</h3>
-			<p>@selectedBacklog?.Description</p>
+		<div class="col">
+			<table>
+				<tr>
+					<img src=@selectedBacklog?.ImageURL height=200 width=200 />
+				</tr>
+				<tr>
+					<div>
+						<h5>@selectedBacklog?.Name</h5>
+						<h6>@selectedBacklog?.Director</h6>
+						<p>@selectedBacklog?.Description</p>
+					</div>
+				</tr>
+			</table>
 		</div>
 	</div>
 </AuthorizeView>
