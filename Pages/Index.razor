@@ -8,6 +8,8 @@
 
 <div class="jumbotron">
     <h1>Welcome to Backlogs!</h1>
+    <p>This is a very early version and has lacks many of the features of the UWP application. Currently, you can only read Backlogs you've created</p>
+    <br />
     <AuthorizeView>
         <Authorized>
             <h4>Recently Added</h4>
@@ -27,21 +29,21 @@
             </div>
 
             <h4>In Progress</h4>
-                <div style="overflow-x:auto;">
-                    <table>
-                        <tr>
-                            @foreach(var backlog in inProgress)
-                            {
-                            <td style="padding: 10px">
-                                <div class="card">
-                                    <img src=@backlog.ImageURL alt="Cover" height=190 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
-                                </div>
-                                <p><strong>@backlog.Progress</strong> <strong>@backlog.Units</strong></p>
-                            </td>
-                            }
-                        </tr>
-                    </table>
-                </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <tr>
+                        @foreach(var backlog in inProgress)
+                        {
+                        <td style="padding: 10px">
+                            <div class="card">
+                                <img src=@backlog.ImageURL alt="Cover" height=190 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
+                            </div>
+                            <p><strong>@backlog.Progress</strong> <strong>@backlog.Units</strong></p>
+                        </td>
+                        }
+                    </tr>
+                </table>
+            </div>
 
             <h4>Recenly Completed</h4>
             <div style="overflow-x:auto;">
