@@ -58,6 +58,10 @@ a, .btn-link {
     padding: 5px;
 }
 
+th, td {
+    padding: 10px
+}
+
 /* Responsive layout - makes a two column-layout instead of four columns */
 @media screen and (max-width: 900px) {
     .column {
@@ -65,11 +69,6 @@ a, .btn-link {
     }
 }
 
-@media screen and (max-width: 600px) {
-    .col {
-        width: 100%;
-    }
-}
 
 #container {
     position: relative;

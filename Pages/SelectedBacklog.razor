@@ -9,6 +9,7 @@
 			<table>
 				<tr>
 					<img src=@selectedBacklog?.ImageURL height=200 width=200 />
+					<br />
 				</tr>
 				<tr>
 					<div>
@@ -18,6 +19,35 @@
 					</div>
 				</tr>
 			</table>
+		</div>
+
+		<div>
+			<div class="col">
+			<table>
+				<tr>
+					<th>Created Date</th>
+					<th>Target Date</th>
+				</tr>
+				<tr>
+					<td>@selectedBacklog?.CreatedDate</td>
+					<td>@selectedBacklog?.TargetDate</td>
+				</tr>
+			</table>
+		</div>
+		</div>
+
+	<br />
+	<br />
+
+	<div>
+		<br />
+		<p>Have you finished checking this out?</p>
+		<button>Mark As Complete</button>
+
+		<br />
+		<br />
+	
+		<p>Metadata obtained from <a href=@sourceLink>@source</a></p>
 		</div>
 	</div>
 </AuthorizeView>
@@ -30,6 +60,8 @@
 	private GraphServiceClient? graphClient;
 	private List<Backlog>? allBacklogs;
 	private Backlog? selectedBacklog;
+	private string? source;
+	private Uri? sourceLink;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -43,5 +75,28 @@
 	protected override void OnParametersSet()
 	{
 		selectedBacklog = allBacklogs?.First(b => b.Id.ToString() == id);
+		switch(selectedBacklog?.Type)
+		{
+			case "Film":
+				source = "IMdB";
+				sourceLink = new Uri("https://www.imdb.com/");
+				break;
+			case "Album":
+				source = "LastFM";
+				sourceLink = new Uri("https://www.last.fm/");
+				break;
+			case "TV":
+				source = "IMdB";
+				sourceLink = new Uri("https://www.imdb.com/");
+				break;
+			case "Game":
+				source = "IGDB";
+				sourceLink = new Uri("https://www.igdb.com/discover");
+				break;
+			case "Book":
+				source = "Google Books";
+				sourceLink = new Uri("https://books.google.com/");
+				break;
+		}
 	}
 }
