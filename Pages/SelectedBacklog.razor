@@ -38,6 +38,23 @@
 
 	<br />
 	<br />
+	<br />
+
+	<div>
+		<br />
+		<h5>Progress</h5>
+			@{
+				var progressCss = "progress" + "";
+				var progressWidthStyle = (((float)selectedBacklog?.Progress / selectedBacklog?.Length) * 100) + "%";
+			}
+		<div class=@progressCss>
+			<div class="progress-bar" role="progressbar" style="width: @progressWidthStyle" aria-valuenow=@selectedBacklog?.Progress
+			aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	</div>
+
+	<br />
+	<br />
 
 	<div>
 		<br />
