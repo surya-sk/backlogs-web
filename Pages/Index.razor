@@ -38,7 +38,14 @@
                             <div class="card">
                                 <img src=@backlog.ImageURL alt="Cover" height=190 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
                             </div>
-                            <p><strong>@backlog.Progress</strong> <strong>@backlog.Units</strong></p>
+                            @{
+				                var progressCss = "progress" + "";
+				                var progressWidthStyle = (((float)backlog.Progress / backlog.Length) * 100) + "%";
+			                }
+		                    <div class=@progressCss style="height: 10px">
+			                    <div class="progress-bar" role="progressbar" style="width: @progressWidthStyle; height: 10px" aria-valuenow=@backlog.Progress
+			                    aria-valuemin="0" aria-valuemax="100"></div>
+		                    </div>
                         </td>
                         }
                     </tr>
