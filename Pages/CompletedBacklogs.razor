@@ -1,0 +1,34 @@
+﻿@page "/completedBacklogs"
+@using Microsoft.Graph
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
+
+<h3>Completed Backlogs</h3>
+<AuthorizeView>
+		<div class="row">
+		@foreach(var backlog in completedBacklogs)
+		{
+			<div class="card" style="padding: 10px">
+				<img src=@backlog.ImageURL alt="Cover" height=140 width=140 >
+				<h6>@backlog.Name</h6>
+				<h6><strong>Rating: </strong>@backlog.UserRating / 5</h6>
+			</div>
+		}
+	</div>
+</AuthorizeView>
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState>? authenticationState { get; set; }
+	private GraphServiceClient? graphClient;
+	private List<Backlog>? completedBacklogs;
+
+	protected override async Task OnInitializedAsync()
+	{
+		graphClient = clientFactory.GetAuthenticatedClient();
+		var user = (await authenticationState).User;
+
+		completedBacklogs = BacklogsSingleton.GetInstance().GetCompletedBacklogs();
+	}
+}
