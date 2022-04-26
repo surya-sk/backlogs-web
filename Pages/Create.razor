@@ -55,12 +55,14 @@
         if(string.IsNullOrEmpty(_name))
         {
             bool result = await JsRuntime.InvokeAsync<bool>("confirm", "Please enter a name");
+            return;
         }
         if(_date != DateTime.MinValue)
         {
             if(DateTime.Compare(DateTime.Now, _date) > 0)
             {
                 bool result = await JsRuntime.InvokeAsync<bool>("confirm", "The date you chose is in the past!!");
+                return;
             }
         }
     }
