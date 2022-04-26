@@ -1,0 +1,68 @@
+﻿@page "/create"
+@using Microsoft.Graph
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
+@inject IJSRuntime JsRuntime
+
+<h3>Create Backlog</h3>
+
+<p>The app will search various sources such as IMdB and Twitch depending on the Backlogs type you select for metadata, and will fail to create a Backlog if not found. Except for music backlogs, search results will be shows to you before confirming creation.</p>
+<h5>DO NOT USE SPECIAL CHARACTERS WHEN ENTERING NAME</h5>
+<h5>When creating music backlogs, please follow this syntax: Artist - Album. Example: Radiohead - Amnesiac.</h5>
+
+<br />
+<h4><strong>Choose type:</strong></h4>
+<select id="type">
+    <option value="Film">Film</option>
+    <option value="Album">Album</option>
+    <option value="TV">TV</option>
+    <option value="Game">Game</option>
+    <option value="Book">Book</option>
+</select>
+
+<br />
+<br />
+
+<h4><strong>Enter name:</strong></h4>
+<input type="text" @bind-value="@_name"/>
+
+<br />
+<br />
+
+<h4><strong>Enter target date </strong>(optional)<strong>:</strong></h4>
+<input type="date" @oninput="@((e) => {_date=DateTime.Parse(e.Value.ToString());})"/>
+
+<br />
+<br />
+
+<button class="btn btn-primary" onclick="@(() => CreateButtonClicked())">Create</button>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+    private GraphServiceClient? graphClient;
+    private DateTime _date { get; set; }
+    private string _name = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+    }
+
+    public async void CreateButtonClicked()
+    {
+        if(string.IsNullOrEmpty(_name))
+        {
+            bool result = await JsRuntime.InvokeAsync<bool>("confirm", "Please enter a name");
+        }
+        if(_date != DateTime.MinValue)
+        {
+            if(DateTime.Compare(DateTime.Now, _date) > 0)
+            {
+                bool result = await JsRuntime.InvokeAsync<bool>("confirm", "The date you chose is in the past!!");
+            }
+        }
+    }
+
+}
