@@ -7,26 +7,24 @@
 <PageTitle>Backlogs</PageTitle>
 <h3>Backlogs</h3>
 
-<AuthorizeView>
-	<label>Choose type</label>
-	<select id="type">
-		<option value="All">All</option>
-		<option value="Films">Films</option>
-		<option value="Albums">Albums</option>
-		<option value="TV">TV</option>
-		<option value="Games">Games</option>
-		<option value="Books">Books</option>
-	</select>
-	<div class="row">
-		@foreach(var backlog in allBacklogs)
-		{
-			<div class="card" style="padding: 10px">
-				<img src=@backlog.ImageURL alt="Cover" height=150 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
-				<h6>@backlog.Name</h6>
-			</div>
-		}
-	</div>
-</AuthorizeView>
+<label>Choose type</label>
+<select id="type">
+	<option value="All">All</option>
+	<option value="Films">Films</option>
+	<option value="Albums">Albums</option>
+	<option value="TV">TV</option>
+	<option value="Games">Games</option>
+	<option value="Books">Books</option>
+</select>
+<div class="row">
+	@foreach(var backlog in allBacklogs)
+	{
+		<div class="card" style="padding: 10px">
+			<img src=@backlog.ImageURL alt="Cover" height=150 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
+			<h6>@backlog.Name</h6>
+		</div>
+	}
+</div>
 
 
 
@@ -45,8 +43,6 @@
 	{
 		graphClient = clientFactory.GetAuthenticatedClient();
 		var user = (await authenticationState).User;
-
-		await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
 
 		allBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
 		filmBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Film"));
