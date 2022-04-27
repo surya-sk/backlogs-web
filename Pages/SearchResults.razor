@@ -1,10 +1,48 @@
 ﻿@page "/searchResults/{name}/{date}/{type}"
+@using BacklogsWeb.Utils
 @using Microsoft.Graph
+@using Newtonsoft.Json
+@using static BacklogsWeb.Utils.MediaObject
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
 @inject NavigationManager uriHelper
 
 <h3>Search Results for @name</h3>
+
+<style>
+      .container {
+        display: flex;
+        align-items: center;
+        justify-content: center
+      }
+      img {
+        max-width: 100%
+      }
+      .image {
+        flex-basis: 40%
+      }
+      .text {
+        font-size: 20px;
+        padding-left: 20px;
+      }
+</style>
+
+<ul>
+	@foreach(var res in results)
+	{
+		<li>
+			<div class="container">
+				<div class = "image">
+					<img src=@res.ImageURL height=100 width=100 >
+				</div>
+				<div class="text">
+					<h2>@res.Name</h2>
+					<p>@res.Description</p>
+				</div>
+			</div>
+		</li>
+	}
+</ul>
 
 @code {
 	[CascadingParameter]
@@ -17,13 +55,173 @@
 	[Parameter]
 	public string? type { get; set; }
 
+	private List<BacklogsWeb.SearchResult>? results;
+
+
 	protected override async Task OnInitializedAsync()
 	{
 		graphClient = clientFactory.GetAuthenticatedClient();
 	}
 
-	protected override void OnParametersSet()
+	protected override async void OnParametersSet()
 	{
 		Console.WriteLine($"Name is {name}, date is {date} and type is {type}");
+		switch(type)
+		{
+			case "Film":
+				await SearchFilmBacklog();
+				break;
+			case "TV":
+				await SearchSeriesBacklogs();
+				break;
+			case "Book":
+				await SearchBookBacklogs();
+				break;
+			case "Game":
+				await SearchGameBacklogs();
+				break;
+		}
+	}
+
+	private async Task SearchFilmBacklog()
+	{
+		string response = await RestClient.GetFilmResponse(name);
+		FilmResult filmResult = JsonConvert.DeserializeObject<FilmResult>(response);
+		if(filmResult.results.Length > 0)
+		{
+			results = new List<BacklogsWeb.SearchResult>();
+			foreach(var result in filmResult.results)
+			{
+				try
+				{
+					results.Add(new BacklogsWeb.SearchResult
+						{
+							Id = result.id,
+							Name = result.title,
+							Description = result.description,
+							ImageURL = result.image
+						});
+				}
+				catch
+				{
+					continue;
+				}
+			}
+			this.StateHasChanged();
+		}
+		else
+		{
+			// Show result dialog
+		}
+	}
+
+	private async Task SearchBookBacklogs()
+	{
+		string response = await RestClient.GetBookResponse(name);
+		var bookData = JsonConvert.DeserializeObject<BookInfo>(response);
+		if(bookData.items.Count > 0)
+		{
+			results = new List<BacklogsWeb.SearchResult>();
+			foreach(var item in bookData.items)
+			{
+				try
+				{
+					results.Add(new BacklogsWeb.SearchResult
+						{
+							Id = item.id,
+							Name = item.volumeInfo.title,
+							Description = item.volumeInfo.publishedDate,
+							ImageURL = item.volumeInfo.imageLinks.thumbnail
+						});
+				}
+				catch
+				{
+					continue;
+				}
+			}
+			this.StateHasChanged();
+		}
+		else
+		{
+			// Show error dialog
+		}
+	}
+
+	private async Task SearchSeriesBacklogs()
+	{
+		string response = await RestClient.GetSeriesResponse(name);
+		SeriesResult seriesResult = JsonConvert.DeserializeObject<SeriesResult>(response);
+		if(seriesResult.results.Length > 0)
+		{
+			results = new List<BacklogsWeb.SearchResult>();
+			foreach(var result in seriesResult.results)
+			{
+				try
+				{
+					results.Add(new BacklogsWeb.SearchResult
+						{
+							Id = result.id,
+							Name = result.title,
+							Description = result.description,
+							ImageURL = result.image
+						});
+				}
+				catch
+				{
+					continue;
+				}
+			}
+			this.StateHasChanged();
+		}
+		else
+		{
+			// Show error dialog
+		}
+	}
+
+	private async Task SearchGameBacklogs()
+	{
+		string response = await RestClient.GetGameResponse(name);
+		var result = JsonConvert.DeserializeObject<GameResponse[]>(response);
+		if(result?.Length > 0)
+		{
+			results = new List<BacklogsWeb.SearchResult>();
+			foreach (var res in result)
+			{
+				string id = res.id.ToString();
+				string gameResponse = await RestClient.GetGameResult(id);
+				var gameResult = JsonConvert.DeserializeObject<GameResult[]>(gameResponse);
+				var gameCoverResponse = await RestClient.GetGameCover(gameResult[0].cover.ToString());
+				var gameCover = JsonConvert.DeserializeObject<GameCover[]>(gameCoverResponse);
+				try
+				{
+					string releaseDateResponse = await RestClient.GetGameReleaseResponse(gameResult[0].release_dates[0].ToString());
+					var releaseDateTimestamp = JsonConvert.DeserializeObject<GameReleaseDate[]>(releaseDateResponse);
+					var releaseDate = DateTimeOffset.FromUnixTimeSeconds(releaseDateTimestamp[0].date);
+					Game game = new Game
+                    {
+                        name = gameResult[0].name + $" ({releaseDate.Year})",
+                        releaseDate = releaseDate.ToString("D"),
+                        image = "https:" + gameCover[0].url
+                    };
+					results.Add(new BacklogsWeb.SearchResult
+                    {
+                        Id = res.id.ToString(),
+                        Name = game.name,
+                        Description = game.releaseDate,
+                        ImageURL = game.image
+                    });
+				}
+				catch
+				{
+					continue;
+				}
+			}
+			this.StateHasChanged();
+		}
+		else
+		{
+			// Show error dialog
+		}
 	}
 }
