@@ -1,7 +1,5 @@
 ﻿@page "/create"
-@using Microsoft.Graph
 
-@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
 @inject NavigationManager uriHelper
 @inject IJSRuntime JsRuntime
 
@@ -13,7 +11,7 @@
 
 <br />
 <h4><strong>Choose type:</strong></h4>
-<select id="type">
+<select id="type" @onchange="@((e) => {_type = e.Value.ToString();})">
     <option value="Film">Film</option>
     <option value="Album">Album</option>
     <option value="TV">TV</option>
@@ -39,16 +37,9 @@
 <button class="btn btn-primary" onclick="@(() => CreateButtonClicked())">Create</button>
 
 @code {
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-    private GraphServiceClient? graphClient;
     private DateTime _date { get; set; }
     private string _name = "";
-
-    protected override async Task OnInitializedAsync()
-    {
-        graphClient = clientFactory.GetAuthenticatedClient();
-    }
+    private string _type = "Film";
 
     public async void CreateButtonClicked()
     {
@@ -65,6 +56,7 @@
                 return;
             }
         }
+        uriHelper.NavigateTo($"searchResults/{_name}/{_date.ToString("D")}/{_type}");
     }
 
 }

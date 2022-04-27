@@ -1,0 +1,29 @@
+﻿@page "/searchResults/{name}/{date}/{type}"
+@using Microsoft.Graph
+
+@inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
+
+<h3>Search Results for @name</h3>
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState>? authenticationState { get; set; }
+	private GraphServiceClient? graphClient;
+	[Parameter]
+	public string? name { get; set; }
+	[Parameter]
+	public string? date { get; set; }
+	[Parameter]
+	public string? type { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		graphClient = clientFactory.GetAuthenticatedClient();
+	}
+
+	protected override void OnParametersSet()
+	{
+		Console.WriteLine($"Name is {name}, date is {date} and type is {type}");
+	}
+}
