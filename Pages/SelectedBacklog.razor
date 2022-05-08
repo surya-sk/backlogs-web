@@ -43,6 +43,11 @@
 	<div>
 		<br />
 		<h5>Progress</h5>
+		<form>
+			<input type="number" min="0" max=@selectedBacklog.Length value=@selectedBacklog.Progress />
+			<label> of <strong>@selectedBacklog.Length</strong> @selectedBacklog.Units</label>
+		</form>
+		<br />
 			@{
 				var progressCss = "progress" + "";
 				var progressWidthStyle = (((float)selectedBacklog?.Progress / selectedBacklog?.Length) * 100) + "%";
@@ -60,6 +65,13 @@
 		<br />
 		<p>Have you finished checking this out?</p>
 		<button>Mark As Complete</button>
+
+			@{
+				if(showRatingBox)
+				{
+					
+				}
+			}
 
 		<br />
 		<br />
@@ -79,6 +91,7 @@
 	private Backlog? selectedBacklog;
 	private string? source;
 	private Uri? sourceLink;
+	private bool showRatingBox = false;
 
 	protected override async Task OnInitializedAsync()
 	{
