@@ -6,6 +6,7 @@ namespace BacklogsWeb.Utils
     public static class RestClient
     {
         static readonly HttpClient client = new HttpClient();
+        static string S_TWITCH_ACCESS_TOKEN = "";
 
         public static async Task<string> GetFilmResponse(string query)
         {
@@ -58,12 +59,27 @@ namespace BacklogsWeb.Utils
         public static async Task<string> GetGameResponse(string query)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string clientSecret = Keys.TWITCH_CLIENT_SECRET;
+            var c = new HttpClient();
+            Uri tokenUri = new Uri("https://id.twitch.tv/oauth2/token");
+            var values = new Dictionary<string, string>
+            {
+                {"client_id", clientID },
+                {"client_secret", clientSecret },
+                {"grant_type", "client_credentials" }
+            };
+            var data = new FormUrlEncodedContent(values);
+            var tokenResponse = await c.PostAsync(tokenUri, data);
+            if (tokenResponse.IsSuccessStatusCode)
+            {
+                var tokenObject = JsonConvert.DeserializeObject<TwitchAccessResponse>(await tokenResponse.Content.ReadAsStringAsync());
+                S_TWITCH_ACCESS_TOKEN = tokenObject.access_token;
+            }
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/games");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
             cl.DefaultRequestHeaders.Add("Client-ID", clientID);
-            cl.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            cl.DefaultRequestHeaders.Add("Authorization", $"Bearer {S_TWITCH_ACCESS_TOKEN}");
             cl.DefaultRequestHeaders.Add("Accept", "application/json");
             var response = await cl.PostAsync(igdbURL, new StringContent($"search \"{query}\";", Encoding.UTF8, "application/json"));
             if (response.IsSuccessStatusCode)
@@ -76,7 +92,7 @@ namespace BacklogsWeb.Utils
         public static async Task<string> GetGameResult(string id)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string accessToken = S_TWITCH_ACCESS_TOKEN;
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/games");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
@@ -94,7 +110,7 @@ namespace BacklogsWeb.Utils
         public static async Task<int> GetCompanyID(string id)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string accessToken = S_TWITCH_ACCESS_TOKEN;
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/involved_companies");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
@@ -115,7 +131,7 @@ namespace BacklogsWeb.Utils
         public static async Task<string> GetGameCompanyResponse(string id)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string accessToken = S_TWITCH_ACCESS_TOKEN;
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/companies");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
@@ -133,7 +149,7 @@ namespace BacklogsWeb.Utils
         public static async Task<string> GetGameCover(string id)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string accessToken = S_TWITCH_ACCESS_TOKEN;
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/covers");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
@@ -151,7 +167,7 @@ namespace BacklogsWeb.Utils
         public static async Task<string> GetGameReleaseResponse(string id)
         {
             string clientID = Keys.TWITCH_CLIENT_ID;
-            string accessToken = Keys.TWITCH_ACCESS_TOKEN;
+            string accessToken = S_TWITCH_ACCESS_TOKEN;
             Uri igdbURL = new Uri($"https://api.igdb.com/v4/release_dates");
             var cl = new HttpClient();
             cl.BaseAddress = igdbURL;
@@ -191,5 +207,12 @@ namespace BacklogsWeb.Utils
             }
             return null;
         }
+    }
+
+    class TwitchAccessResponse
+    {
+        public string access_token { get; set; }
+        public int expires_in { get; set; }
+        public string token_type { get; set; }
     }
 }
