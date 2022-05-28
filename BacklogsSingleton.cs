@@ -79,7 +79,7 @@ namespace BacklogsWeb
             var incompleteBacklogs = new List<Backlog>();
             foreach (var backlog in backlogs)
             {
-                if(!backlog.IsComplete ?? true)
+                if(!backlog.IsComplete)
                 {
                     if (backlog.CreatedDate == "None" || backlog.CreatedDate == null)
                     {
@@ -96,7 +96,7 @@ namespace BacklogsWeb
             var completedBacklogs = new List<Backlog>();
             foreach (var backlog in backlogs)
             {
-                if(backlog.IsComplete ?? true)
+                if(backlog.IsComplete)
                 {
                     if (backlog.CompletedDate == null)
                     {
