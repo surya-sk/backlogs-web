@@ -2,10 +2,12 @@
 @using BacklogsWeb.Utils
 @using Microsoft.Graph
 @using Newtonsoft.Json
+@using System.Globalization
 @using static BacklogsWeb.Utils.MediaObject
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
 @inject NavigationManager uriHelper
+@inject IJSRuntime JsRuntime
 
 <h3>Search Results for @name</h3>
 
@@ -36,7 +38,7 @@
 					<img src=@res.ImageURL height=100 width=100 >
 				</div>
 				<div class="text">
-					<h2>@res.Name</h2>
+					<p @onclick="@(() => SearchResultClicked(res.Id))">@res.Name</p>
 					<p>@res.Description</p>
 				</div>
 			</div>
@@ -48,6 +50,7 @@
 	[CascadingParameter]
 	private Task<AuthenticationState>? authenticationState { get; set; }
 	private GraphServiceClient? graphClient;
+	private List<Backlog> backlogs;
 	[Parameter]
 	public string? name { get; set; }
 	[Parameter]
@@ -61,6 +64,7 @@
 	protected override async Task OnInitializedAsync()
 	{
 		graphClient = clientFactory.GetAuthenticatedClient();
+		backlogs = BacklogsSingleton.GetInstance().GetBacklogs();
 	}
 
 	protected override async void OnParametersSet()
@@ -79,6 +83,28 @@
 				break;
 			case "Game":
 				await SearchGameBacklogs();
+				break;
+			case "Album":
+				await CreateMusicBacklog();
+				break;
+		}
+	}
+
+	private async void SearchResultClicked(string id)
+	{
+		switch(type)
+		{
+			case "Film":
+				await CreateFilmBacklog(id);
+				break;
+			case "TV":
+				await CreateSeriesBacklog(id);
+				break;
+			case "Book":
+				await CreateBookBacklog(id);
+				break;
+			case "Game":
+				await CreateGameBacklog(id);
 				break;
 		}
 	}
@@ -224,4 +250,190 @@
 			// Show error dialog
 		}
 	}
+
+	private async Task CreateBacklogItem(Backlog backlog)
+	{
+		if (backlog != null)
+		{
+			backlogs.Add(backlog);
+			BacklogsSingleton.GetInstance().SaveBacklogs(backlogs);
+			await BacklogsSingleton.GetInstance().WriteDataAsync(graphClient);
+			uriHelper.NavigateTo("/");
+		}
+		else
+		{
+			bool result = await JsRuntime.InvokeAsync<bool>("confirm", "Could not create backlog");
+		}
+	}
+
+	private async Task CreateFilmBacklog(string selectedItemId)
+	{
+		string filmData = await RestClient.GetFilmDataResponse(selectedItemId);
+		Film film = JsonConvert.DeserializeObject<Film>(filmData);
+		Backlog backlog = new Backlog
+		{
+			Id = Guid.NewGuid(),
+			Name = film.fullTitle,
+			Type = "Film",
+			ReleaseDate = film.releaseDate,
+			ImageURL = film.image,
+			TargetDate = date,
+			Description = film.plot,
+			Length = film.runtimeMins,
+			Director = film.directors,
+			Progress = 0,
+			Units = "Minutes",
+			ShowProgress = true,
+			UserRating = -1,
+			CreatedDate = DateTimeOffset.Now.Date.ToString("D", CultureInfo.InvariantCulture)
+		};
+		await CreateBacklogItem(backlog);
+	}
+
+	private async Task CreateMusicBacklog()
+	{
+		try
+		{
+			string response = await RestClient.GetMusicResponse(name);
+			var musicData = JsonConvert.DeserializeObject<MusicData>(response);
+			if(musicData != null)
+			{
+				Music music = new Music
+				{
+					name = musicData.album.name,
+					artist = musicData.album.artist,
+					description = musicData.album.wiki == null ? "No summary found" : musicData.album.wiki.summary,
+					releaseDate = musicData.album.wiki == null ? "" : musicData.album.wiki.published,
+					image = musicData.album.image[2].Text
+				};
+				Backlog backlog = new Backlog
+                 {
+                        Id = Guid.NewGuid(),
+                        Name = music.name,
+                        Type = "Album",
+                        ReleaseDate = music.releaseDate,
+                        ImageURL = music.image,
+                        TargetDate = date,
+                        Description = music.description,
+                        Director = music.artist,
+                        Progress = 0,
+                        Units = "Minutes",
+                        ShowProgress = false,
+                        UserRating = -1,
+                        CreatedDate = DateTimeOffset.Now.Date.ToString("D", CultureInfo.InvariantCulture)
+                 };
+				await CreateBacklogItem(backlog);
+			}
+		}
+		catch
+		{
+
+		}
+	}
+
+	private async Task CreateBookBacklog(string id)
+	{
+		var title = name;
+		string response = await RestClient.GetBookResponse(title);
+        var bookData = JsonConvert.DeserializeObject<BookInfo>(response);
+        Item item = new Item();
+        foreach (var i in bookData.items)
+        {
+            if (i.id == id)
+            {
+                item = i;
+            }
+        }
+        Book book = new Book
+        {
+            name = item.volumeInfo.title,
+            author = string.Concat(item.volumeInfo.authors),
+            desciption = item.volumeInfo.description,
+            releaseDate = item.volumeInfo.publishedDate,
+            image = item.volumeInfo.imageLinks.thumbnail,
+            length = item.volumeInfo.pageCount
+        };
+        Backlog backlog = new Backlog
+        {
+            
+			Id = Guid.NewGuid(),
+            Name = book.name,
+            Type = "Book",
+            ReleaseDate = book.releaseDate,
+            ImageURL = book.image,
+            TargetDate = date,
+            Description = book.desciption,
+            Director = book.author,
+            Length = book.length,
+            Progress = 0,
+            Units = "Pages",
+            ShowProgress = true,
+            UserRating = -1,
+            CreatedDate = DateTimeOffset.Now.Date.ToString("D", CultureInfo.InvariantCulture)
+        };
+        await CreateBacklogItem(backlog);
+    }
+
+	private async Task CreateSeriesBacklog(string id)
+    {
+        string seriesData = await RestClient.GetSeriesDataResponse(id);
+        Series series = JsonConvert.DeserializeObject<Series>(seriesData);
+        Backlog backlog = new Backlog
+        {
+            Id = Guid.NewGuid(),
+            Name = series.fullTitle,
+            Type = "TV",
+            ReleaseDate = series.releaseDate,
+            ImageURL = series.image,
+            TargetDate = date,
+            Description = series.plot,
+            Length = series.TvSeriesInfo.Seasons.Count,
+            Director = series.TvSeriesInfo.Creators,
+            Progress = 0,
+            Units = "Season(s)",
+            ShowProgress = true,
+            UserRating = -1,
+            CreatedDate = DateTimeOffset.Now.Date.ToString("D", CultureInfo.InvariantCulture)
+        };
+        await CreateBacklogItem(backlog);
+    }
+
+	private async Task CreateGameBacklog(string id)
+    {
+        string gameResponse = await RestClient.GetGameResult(id);
+        var gameResult = JsonConvert.DeserializeObject<GameResult[]>(gameResponse);
+        int companyID = await RestClient.GetCompanyID(gameResult[0].involved_companies[0].ToString());
+        var gameCompanyResponse = await RestClient.GetGameCompanyResponse(companyID.ToString());
+        var gameCompany = JsonConvert.DeserializeObject<GameCompany[]>(gameCompanyResponse);
+        var gameCoverResponse = await RestClient.GetGameCover(gameResult[0].cover.ToString());
+        var gameCover = JsonConvert.DeserializeObject<GameCover[]>(gameCoverResponse);
+        string releaseDateResponse = await RestClient.GetGameReleaseResponse(gameResult[0].release_dates[0].ToString());
+        var releaseDateTimestamp = JsonConvert.DeserializeObject<GameReleaseDate[]>(releaseDateResponse);
+        var releaseDate = DateTimeOffset.FromUnixTimeSeconds(releaseDateTimestamp[0].date);
+        Game game = new Game
+        {
+            name = gameResult[0].name + $" ({releaseDate.Year})",
+            releaseDate = releaseDate.ToString("D"),
+            company = gameCompany[0].name,
+            image = "https:" + gameCover[0].url,
+            storyline = gameResult[0].storyline
+        };
+        Backlog backlog = new Backlog
+        {
+            Id = Guid.NewGuid(),
+            Name = game.name,
+            Type = "Game",
+            ReleaseDate = game.releaseDate,
+            ImageURL = game.image,
+            TargetDate = date,
+            Description = game.storyline,
+            Length = 0,
+            Director = game.company,
+            Progress = 0,
+            ShowProgress = false,
+            UserRating = -1,
+            CreatedDate = DateTimeOffset.Now.Date.ToString("D" ,CultureInfo.InvariantCulture)
+        };
+        await CreateBacklogItem(backlog);
+    }
 }
