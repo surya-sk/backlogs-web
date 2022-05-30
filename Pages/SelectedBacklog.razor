@@ -1,5 +1,6 @@
 ﻿@page "/selectedBacklog/{id}"
 @using Microsoft.Graph
+@using System.Globalization
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
 @inject NavigationManager uriHelper
@@ -64,20 +65,22 @@
 
 	<div>
 		<br />
-		<form>
-			<input type="button" @onclick="@SaveBacklog" value="Save" />
-			<input type="button" @onclick="@DeleteBacklog" value="Delete" />
-		</form>
-		<br />
 		<p>Have you finished checking this out?</p>
-		<button>Mark As Complete</button>
+		<button class="btn btn-primary" onclick="@(() => ShowRatingBox())">Mark As Complete</button>
 
 			@{
 				if(showRatingBox)
 				{
-					
+					<label>Rating: </label>
+					<input type="number" min="0" max="5" @bind=@selectedBacklog.UserRating />
 				}
 			}
+		<br />
+		<br />
+		<form>
+			<input class="btn btn-primary" type="button" @onclick="@SaveBacklog" value="Save" />
+			<input class="btn btn-primary" type="button" @onclick="@DeleteBacklog" value="Delete" />
+		</form>
 
 		<br />
 		<br />
@@ -105,7 +108,7 @@
 		var user = (await authenticationState).User;
 
 		//await BacklogsSingleton.GetInstance().ReadDataAsync(graphClient);
-		allBacklogs = BacklogsSingleton.GetInstance().GetIncompleteBacklogs();
+		allBacklogs = BacklogsSingleton.GetInstance().GetBacklogs();
 	}
 
 	protected override void OnParametersSet()
@@ -145,8 +148,14 @@
 				allBacklogs[i] = selectedBacklog;
 			}
 		}
+		if(showRatingBox)
+		{
+			selectedBacklog.IsComplete = true;
+			selectedBacklog.CompletedDate = DateTimeOffset.Now.Date.ToString("d", CultureInfo.InvariantCulture);
+		}
 		BacklogsSingleton.GetInstance().SaveBacklogs(allBacklogs);
 		await BacklogsSingleton.GetInstance().WriteDataAsync(graphClient);
+		uriHelper.NavigateTo("/");
 	}
 
 	public async void DeleteBacklog()
@@ -155,5 +164,11 @@
 		BacklogsSingleton.GetInstance().SaveBacklogs(allBacklogs);
 		await BacklogsSingleton.GetInstance().WriteDataAsync(graphClient);
 		uriHelper.NavigateTo("/");
+	}
+
+	public void ShowRatingBox()
+	{
+		showRatingBox = true;
+		this.StateHasChanged();
 	}
 }
