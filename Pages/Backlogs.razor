@@ -8,7 +8,7 @@
 <h3>Backlogs</h3>
 
 <label>Choose type</label>
-<select id="type">
+<select id="type" @onchange="@ChangeBacklogType">
 	<option value="All">All</option>
 	<option value="Films">Films</option>
 	<option value="Albums">Albums</option>
@@ -17,7 +17,7 @@
 	<option value="Books">Books</option>
 </select>
 <div class="row">
-	@foreach(var backlog in allBacklogs)
+	@foreach(var backlog in backlogs)
 	{
 		<div class="card" style="padding: 10px">
 			<img src=@backlog.ImageURL alt="Cover" height=150 width=140 onclick="@(() => OpenBacklog(backlog.Id))" >
@@ -38,6 +38,7 @@
 	private List<Backlog>? albumBacklogs;
 	private List<Backlog>? bookBacklogs;
 	private List<Backlog>? gameBacklogs;
+	private List<Backlog>? backlogs;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -50,7 +51,35 @@
 		albumBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Album"));
 		gameBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Game"));
 		bookBacklogs = new List<Backlog>(allBacklogs.Where(b => b.Type == "Book"));
+		backlogs = allBacklogs;
 
+	}
+
+	public void ChangeBacklogType(ChangeEventArgs e)
+	{
+		switch(e.Value.ToString())
+		{
+			case "Films":
+				backlogs = filmBacklogs;
+				break;
+			case "Albums":
+				backlogs = albumBacklogs;
+				break;
+			case "TV":
+				backlogs = tvBacklogs;
+				break;
+			case "Books":
+				backlogs = bookBacklogs;
+				break;
+			case "Games":
+				backlogs = gameBacklogs;
+				break;
+			default:
+				backlogs = allBacklogs;
+				break;
+		}
+		Console.WriteLine(e.Value);
+		this.StateHasChanged();
 	}
 
 	public void OpenBacklog(Guid id)
