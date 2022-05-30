@@ -2,6 +2,7 @@
 @using Microsoft.Graph
 
 @inject BacklogsWeb.Graph.GraphClientFactory clientFactory
+@inject NavigationManager uriHelper
 
 <AuthorizeView>
 	<div class="row">
@@ -44,7 +45,7 @@
 		<br />
 		<h5>Progress</h5>
 		<form>
-			<input type="number" min="0" max=@selectedBacklog.Length value=@selectedBacklog.Progress />
+			<input type="number" min="0" max=@selectedBacklog.Length @bind=@selectedBacklog.Progress />
 			<label> of <strong>@selectedBacklog.Length</strong> @selectedBacklog.Units</label>
 		</form>
 		<br />
@@ -62,6 +63,11 @@
 	<br />
 
 	<div>
+		<br />
+		<form>
+			<input type="button" @onclick="@SaveBacklog" value="Save" />
+			<input type="button" @onclick="@DeleteBacklog" value="Delete" />
+		</form>
 		<br />
 		<p>Have you finished checking this out?</p>
 		<button>Mark As Complete</button>
@@ -128,5 +134,26 @@
 				sourceLink = new Uri("https://books.google.com/");
 				break;
 		}
+	}
+
+	public async void SaveBacklog()
+	{
+		for(int i = 0; i< allBacklogs.Count; i++)
+		{
+			if(allBacklogs[i].Id.ToString() == id)
+			{
+				allBacklogs[i] = selectedBacklog;
+			}
+		}
+		BacklogsSingleton.GetInstance().SaveBacklogs(allBacklogs);
+		await BacklogsSingleton.GetInstance().WriteDataAsync(graphClient);
+	}
+
+	public async void DeleteBacklog()
+	{
+		allBacklogs.Remove(selectedBacklog);
+		BacklogsSingleton.GetInstance().SaveBacklogs(allBacklogs);
+		await BacklogsSingleton.GetInstance().WriteDataAsync(graphClient);
+		uriHelper.NavigateTo("/");
 	}
 }
